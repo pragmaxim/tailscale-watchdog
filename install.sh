@@ -36,7 +36,7 @@ systemctl daemon-reload
 
 echo ""
 echo "Install complete. Next steps:"
-echo "  1. Edit $CONFIG_FILE (set TAILSCALE_PROBE_URL, optionally TAILNET_RESOLVERS)."
+echo "  1. Edit $CONFIG_FILE (set TAILSCALE_PROBE_URLS, optionally INTERNET_PROBE_URL and TAILNET_RESOLVERS)."
 echo "  2. Enable the timer:"
 echo "       sudo systemctl enable --now tailscale-watchdog.timer"
 echo "  3. Tail logs:"

@@ -1,18 +1,27 @@
 # /etc/default/tailscale-watchdog
 # Environment file read by the tailscale-watchdog.service unit.
-# All values are optional; defaults are shown commented out.
+# Most values are optional; defaults are shown commented out. Set at least one
+# tailnet probe before enabling the timer.
 
-# Control plane URL. Used both as the reachability probe (curled by the watchdog)
-# AND as the --login-server argument when the recovery script runs `tailscale up`.
-# Default points at Tailscale's SaaS control plane; set this to your headscale
-# URL if you self-host.
+# Required. One or more URLs reachable only when the tailnet path is healthy,
+# space-separated. If any tailnet probe succeeds, tailnet reachability is
+# considered healthy.
+# TAILSCALE_PROBE_URLS="http://100.64.0.10/health http://nas.tailnet.local/health"
+
+# Public internet reachability probe. If this fails too, the watchdog treats the
+# outage as underlay/upstream and skips Tailscale recovery.
+# INTERNET_PROBE_URL=https://controlplane.tailscale.com/
+
+# Control plane URL used only as the --login-server argument when the recovery
+# script runs `tailscale up`. Default points at Tailscale's SaaS control plane;
+# set this to your headscale URL if you self-host.
 # TAILSCALE_LOGIN_SERVER=https://controlplane.tailscale.com/
 
 # Tailnet-internal DNS resolvers, space-separated. If your tailnet pushes
 # custom DNS servers (e.g. an internal Bind/CoreDNS/AD reachable only over the
-# tunnel), list them here. The watchdog will probe each with `dig`, ICMP
-# `ping`, and `tailscale ping` to discriminate tunnel/peer failures from
-# DNS-daemon failures. Leave empty to skip these probes.
+# tunnel), list them here for diagnostics. The watchdog will probe each with
+# `dig`, ICMP `ping`, and `tailscale ping` after failures to discriminate
+# tunnel/peer failures from DNS-daemon failures. Leave empty to skip these probes.
 # TAILNET_RESOLVERS="10.0.0.2 10.0.0.3"
 
 # Rate limit on auto-recovery. After RATE_LIMIT_MAX recoveries in a rolling

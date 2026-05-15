@@ -81,28 +81,44 @@ fi
 ticks=$(echo "$JOURNAL"      | grep -c '=== Tailscale Watchdog' || true)
 done_ok=$(echo "$JOURNAL"    | grep -c '=== Done ===' || true)
 dns_healed=$(echo "$JOURNAL" | grep -c 'reachable after DNS flush' || true)
+tailnet_fail=$(echo "$JOURNAL" | grep -c 'reason=tailnet-probe-unreachable' || true)
+internet_fail=$(echo "$JOURNAL" | grep -c 'reason=internet-probe-unreachable' || true)
+combined_fail=$(echo "$JOURNAL" | grep -c 'reason=tailnet-and-internet-unreachable' || true)
 soft_ok=$(echo "$JOURNAL"    | grep -c 'Recovery complete (soft)' || true)
 hard_ok=$(echo "$JOURNAL"    | grep -c 'Recovery complete (hard)' || true)
 degraded=$(echo "$JOURNAL"   | grep -c 'Recovery complete (degraded)' || true)
 rate_lim=$(echo "$JOURNAL"   | grep -c 'RATE-LIMITED' || true)
+skipped=$(echo "$JOURNAL"    | grep -c 'Recovery skipped:' || true)
 
 printf 'Total ticks:         %5d\n' "$ticks"
 printf 'Clean (Done):        %5d\n' "$done_ok"
 printf 'DNS hiccups healed:  %5d\n' "$dns_healed"
+printf 'Tailnet failures:    %5d\n' "$tailnet_fail"
+printf 'Internet failures:   %5d\n' "$internet_fail"
+printf 'Combined failures:   %5d\n' "$combined_fail"
 printf 'Soft recoveries:     %5d\n' "$soft_ok"
 printf 'Hard recoveries:     %5d\n' "$hard_ok"
 printf 'Degraded outcomes:   %5d\n' "$degraded"
 printf 'Rate-limit skips:    %5d\n' "$rate_lim"
+printf 'Recovery skips:      %5d\n' "$skipped"
 
 section "Verdict"
 if [ "$degraded" -gt 0 ] || [ "$rate_lim" -gt 0 ]; then
     echo "ATTENTION: watchdog could not restore connectivity in this window."
     echo "Investigate the DIAG blocks (rerun with --full, or extract from journal)."
+elif [ "$combined_fail" -gt 0 ]; then
+    echo "Tailnet and internet probes both failed. Likely underlay or upstream outage."
+    echo "Tailscale recovery was intentionally skipped for these events."
+elif [ "$internet_fail" -gt 0 ]; then
+    echo "Internet probe failed while tailnet stayed reachable."
+    echo "Tailscale recovery was intentionally skipped for these events."
 elif [ "$hard_ok" -gt 0 ]; then
     echo "Daemon required full restart at least once. Soft recovery wasn't enough."
     echo "If this recurs, dig into tailscaled's own logs."
 elif [ "$soft_ok" -gt 0 ]; then
     echo "Soft recovery (down/up) was applied. Review DIAG for the root cause."
+elif [ "$tailnet_fail" -gt 0 ]; then
+    echo "Tailnet probe failed and recovery was attempted. Review DIAG for the root cause."
 elif [ "$dns_healed" -gt 0 ]; then
     echo "Only transient DNS hiccups, self-healed via cache flush. Usually nothing to do."
 else
@@ -130,6 +146,12 @@ events=$(echo "$JOURNAL" | awk '
     /Recovery complete \(hard\)/      { outcome = "hard" }
     /Recovery complete \(degraded\)/  { outcome = "degraded" }
     /RATE-LIMITED/                    { outcome = "rate-limited" }
+    /Recovery skipped: internet probe unreachable/ {
+        outcome = "skipped-underlay"
+    }
+    /Recovery skipped: tailnet probe is reachable/ {
+        outcome = "skipped-internet"
+    }
     END {
         if (in_tick && reason != "") {
             printf "%s  reason=%-20s outcome=%s\n", ts, reason, (outcome=="" ? "(none)" : outcome)
