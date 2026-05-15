@@ -81,9 +81,9 @@ fi
 ticks=$(echo "$JOURNAL"      | grep -c '=== Tailscale Watchdog' || true)
 done_ok=$(echo "$JOURNAL"    | grep -c '=== Done ===' || true)
 dns_healed=$(echo "$JOURNAL" | grep -c 'reachable after DNS flush' || true)
-tailnet_fail=$(echo "$JOURNAL" | grep -c 'reason=tailnet-probe-unreachable' || true)
-internet_fail=$(echo "$JOURNAL" | grep -c 'reason=internet-probe-unreachable' || true)
-combined_fail=$(echo "$JOURNAL" | grep -c 'reason=tailnet-and-internet-unreachable' || true)
+tailnet_fail=$(echo "$JOURNAL" | grep -c 'DIAG_START .*reason=tailnet-probe-unreachable' || true)
+internet_fail=$(echo "$JOURNAL" | grep -c 'DIAG_START .*reason=internet-probe-unreachable' || true)
+combined_fail=$(echo "$JOURNAL" | grep -c 'DIAG_START .*reason=tailnet-and-internet-unreachable' || true)
 soft_ok=$(echo "$JOURNAL"    | grep -c 'Recovery complete (soft)' || true)
 hard_ok=$(echo "$JOURNAL"    | grep -c 'Recovery complete (hard)' || true)
 degraded=$(echo "$JOURNAL"   | grep -c 'Recovery complete (degraded)' || true)
@@ -137,7 +137,7 @@ events=$(echo "$JOURNAL" | awk '
         in_tick = 1
         next
     }
-    /reason=/ {
+    /DIAG_START/ && /reason=/ {
         if (match($0, /reason=[a-z-]+/)) {
             reason = substr($0, RSTART + 7, RLENGTH - 7)
         }
