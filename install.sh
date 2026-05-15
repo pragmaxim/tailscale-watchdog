@@ -18,6 +18,7 @@ CONFIG_EXAMPLE="$REPO_DIR/etc/default/tailscale-watchdog.example"
 echo "Installing scripts to $BIN_DIR..."
 install -m 755 "$REPO_DIR/bin/tailscale-watchdog.sh" "$BIN_DIR/tailscale-watchdog.sh"
 install -m 755 "$REPO_DIR/bin/tailscale-recover.sh"  "$BIN_DIR/tailscale-recover.sh"
+install -m 755 "$REPO_DIR/bin/tailscale-diagnose.sh" "$BIN_DIR/tailscale-diagnose.sh"
 
 echo "Installing systemd units to $SYSTEMD_DIR..."
 install -m 644 "$REPO_DIR/systemd/tailscale-watchdog.service" "$SYSTEMD_DIR/tailscale-watchdog.service"

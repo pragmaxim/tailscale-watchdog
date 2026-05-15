@@ -109,6 +109,19 @@ Trigger a one-off run on demand:
 sudo systemctl start tailscale-watchdog.service
 ```
 
+## Diagnose recent activity
+
+For a digest report instead of raw journal output, use the diagnose helper:
+
+```bash
+sudo tailscale-diagnose.sh                            # last hour (default)
+sudo tailscale-diagnose.sh --since "today"
+sudo tailscale-diagnose.sh --since "6 hours ago"
+sudo tailscale-diagnose.sh --since "2026-05-15 09:00:00" --full
+```
+
+Needs `sudo` (or `systemd-journal` group membership) to read the unit's journal and the state file.
+
 ## How to read the diagnostics
 
 The four-layer DNS probe is the fastest way to localize a root cause:
