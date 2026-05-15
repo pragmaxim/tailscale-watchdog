@@ -1,0 +1,11 @@
+[Unit]
+Description=Tailscale watchdog
+After=tailscaled.service network-online.target
+Wants=tailscaled.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/tailscale-watchdog
+ExecStart=/usr/local/bin/tailscale-watchdog.sh
+StateDirectory=tailscale-watchdog
+TimeoutStartSec=45s

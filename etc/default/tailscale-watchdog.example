@@ -1,0 +1,49 @@
+# /etc/default/tailscale-watchdog
+# Environment file read by the tailscale-watchdog.service unit.
+# All values are optional; defaults are shown commented out.
+
+# Control plane URL. Used both as the reachability probe (curled by the watchdog)
+# AND as the --login-server argument when the recovery script runs `tailscale up`.
+# Default points at Tailscale's SaaS control plane; set this to your headscale
+# URL if you self-host.
+# TAILSCALE_LOGIN_SERVER=https://controlplane.tailscale.com/
+
+# Tailnet-internal DNS resolvers, space-separated. If your tailnet pushes
+# custom DNS servers (e.g. an internal Bind/CoreDNS/AD reachable only over the
+# tunnel), list them here. The watchdog will probe each with `dig`, ICMP
+# `ping`, and `tailscale ping` to discriminate tunnel/peer failures from
+# DNS-daemon failures. Leave empty to skip these probes.
+# TAILNET_RESOLVERS="10.0.0.2 10.0.0.3"
+
+# Rate limit on auto-recovery. After RATE_LIMIT_MAX recoveries in a rolling
+# RATE_LIMIT_WINDOW second window, further attempts are skipped (the watchdog
+# still runs, logs, and captures diagnostics).
+# RATE_LIMIT_WINDOW=3600
+# RATE_LIMIT_MAX=3
+
+# Watchdog timeouts (seconds).
+# CURL_TIMEOUT=5
+# STATUS_TIMEOUT=10
+# DNS_FLUSH_WAIT=2
+
+# Service unit to monitor and restart. Rarely needs changing.
+# TAILSCALE_SERVICE=tailscaled
+
+# Path to the recovery script invoked when reachability checks fail.
+# RECOVERY_SCRIPT=/usr/local/bin/tailscale-recover.sh
+
+# --- Recovery-script settings ---
+# Read by tailscale-recover.sh, which performs a soft recovery
+# (`tailscale down` + `tailscale up`) before falling back to a service restart.
+
+# Non-root user permitted to manage tailscale (passed to `tailscale up --operator=`).
+# Omit if you don't use the operator feature.
+# TAILSCALE_OPERATOR=youruser
+
+# Extra flags passed to `tailscale up`. Tweak only if you need a non-default set.
+# TAILSCALE_UP_FLAGS="--accept-dns --accept-routes"
+
+# Recovery-script timeouts (seconds).
+# UP_TIMEOUT=30
+# POST_UP_WAIT=10
+# POST_RESTART_WAIT=15
